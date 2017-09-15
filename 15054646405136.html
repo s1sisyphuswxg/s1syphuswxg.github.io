@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	Welcome to MWeb - 
+  	Docker + Selenium Grid构建Web测试环境 - 
   	
 	</title>
 
@@ -118,22 +118,62 @@
 			<div class="mid-col-container"> <div id="content" class="inner">
 
 	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-		<h1 class="title" itemprop="name">Welcome to MWeb</h1>
+		<h1 class="title" itemprop="name">Docker + Selenium Grid构建Web测试环境</h1>
 		<div class="entry-content" itemprop="articleBody">
-			<p>What is MWeb? MWeb is a Pro Markdown writing, note taking, and static blog generator app. MWeb uses the Github Flavored Markdown syntax. Please check the MWeb official website: <a href="http://www.mweb.im">http://www.mweb.im</a> introduction video; it will show you how to use MWeb. We also suggest that you check the MWeb official help document: <a href="http://www.mweb.im/help.html">http://www.mweb.im/help.html</a></p>
+			<h3 id="toc_0">1. 基础知识</h3>
 
-<h2 id="toc_0">Things you should know</h2>
+<p>Selenium<br/>
+    * 是针对Web应用的自动化测试框架和工具集合<br/>
+    * 支持多种浏览器和编程语言<br/>
+    * 测试用例直接运行在浏览器中，并模拟用户的操作</p>
 
-<p>MWeb has two Modes: External Mode and Library Mode.<br/>
-In External Mode you can edit classic text and markdown files from anywhere on your Mac. As an example, you can point MWeb to a folder on Dropbox. Library Mode is designed for note taking and static blog/website generator. For more info, please check the <a href="http://www.mweb.im">MWeb official website</a> introduction video and help document.</p>
+<p>Selenium Grid<br/>
+    * 是一种可以进行分布式自动化测试的辅助工具，该架构中包含两个主要角色<br/>
+    * Hub是中心点控制节点<br/>
+    * Node是Selenium的工作节点，它们注册到Hub上，并会操作浏览器执行由Hub下发的自动测试用例</p>
 
-<h2 id="toc_1">Help us to make MWeb better!</h2>
+<p>Selenium官方已经支持了Docker搭建镜像环境，地址：<a href="https://hub.docker.com/r/selenium/">https://hub.docker.com/r/selenium/</a></p>
 
-<ol>
-<li>Tell your friends about MWeb.</li>
-<li>Send Feedback: <a href="mailto:coderforart+233@gmail.com">coderforart+233@gmail.com</a></li>
-<li>Leave a review or at least a rating in the Mac App Store.</li>
-</ol>
+<p>构建selenium的Dockerfile来自Github：<a href="https://github.com/SeleniumHQ/docker-selenium">https://github.com/SeleniumHQ/docker-selenium</a></p>
+
+<h3 id="toc_1">2. 实践</h3>
+
+<p>1). 拉取最新镜像</p>
+
+<pre><code>docker pull selenium/hub
+docker pull node-chrome-debug
+</code></pre>
+
+<p>2). 启动容器</p>
+
+<p><code>docker run -d -p 4444:4444 --name selenium-hub selenium/hub</code><br/>
+<code>docker run -d -P -p 5901:5900 --link selenium-hub:hub --name chrome-node1                                       selenium/node-chrome-debug</code></p>
+
+<p>3). 检查容器是否正常启动</p>
+
+<pre><code> ~/ docker ps | grep selenium
+f262c6ef947c        selenium/node-chrome-debug   &quot;/opt/bin/entry_po...&quot;   6 seconds ago       Up 4 seconds        0.0.0.0:5901-&gt;5900/tcp   chrome-node1
+e47bee85df3d        selenium/hub                 &quot;/opt/bin/entry_po...&quot;   2 minutes ago       Up 2 minutes        0.0.0.0:4444-&gt;4444/tcp   selenium-hub
+</code></pre>
+
+<p>4). 浏览器中输入<code>[HOST_IP]:4444/grid/console</code>可以查看节点注册情况<br/>
+节点如果为debug，可以通过vnc连接<code>[HOST_IP]:5901</code>可以远程连接到node1（密码为secret) ;<br/>
+也可以通过 Safari中 <code>vnc://[HOST_IP]:PORT</code> 中查看。</p>
+
+<p>至此，Docker + Selenium 测试环境已经搭建OK。</p>
+
+<hr/>
+
+<p>--- from htpeng<br/>
+已经将Selenium Grid 和 node-chrome-debug 集成在一个Docker中<br/>
+Image:  <code>172.16.34.60:4000/pht/selenium:selenium</code><br/>
+pull镜像时首先需要：</p>
+
+<pre><code>[root@ubuntu ~]# cat /etc/docker/daemon.json
+{&quot;registry-mirrors&quot;: [&quot;http://c61e638d.m.daocloud.io&quot;], &quot;insecure-registries&quot;: [&quot;172.16.34.60:4000&quot;]}
+</code></pre>
+
+<p>运用到 fitos_test 中，将自动化代码下载到Selenium Grid中，运行测试脚本，即可在node-chrome-debug中运行。(可以通过vnc远程查看)</p>
 
 		</div>
 	</article>
